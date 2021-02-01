@@ -371,11 +371,52 @@ void pn5180_tick()
 	pn5180_wait_rx();
 	pn5180_read_data(0);
 
-	// Enable TX_CRC_ENABLE
+#if 1
+	// Anticollision L1
+	{static const uint8_t d[] = {NFC_AC_CL1};
+	 pn5180_send_data(d, sizeof(d), 0x00);}
+	pn5180_wait_rx();
+	pn5180_read_data(0);
+
+	// Enable TX & RX CRC
 	{static const uint8_t d[] = {CMD_WRITE_REGISTER_OR_MASK, REG_CRC_TX_CONFIG, 0x01, 0x00, 0x00, 0x00};
 	 pn5180_transfer_nss_const(d, sizeof(d));}
+	{static const uint8_t d[] = {CMD_WRITE_REGISTER_OR_MASK, REG_CRC_RX_CONFIG, 0x01, 0x00, 0x00, 0x00};
+	 pn5180_transfer_nss_const(d, sizeof(d));}
+	// Select CL1
+	// CL (0x88: not complete), UID 0-3, check byte 0
+	{static const uint8_t d[] = {NFC_SEL_CL1, 0x88, 0x04, 0x97, 0xc0, 0xdb};
+	 pn5180_send_data(d, sizeof(d), 0x00);}
+	pn5180_wait_rx();
+	pn5180_read_data(0);
+	// Disable TX & RX CRC
+	{uint8_t d[] = {CMD_WRITE_REGISTER_AND_MASK, REG_CRC_TX_CONFIG, 0xFE, 0xFF, 0xFF, 0xFF};
+	pn5180_transfer_nss(d, sizeof(d));}
+	{uint8_t d[] = {CMD_WRITE_REGISTER_AND_MASK, REG_CRC_RX_CONFIG, 0xFE, 0xFF, 0xFF, 0xFF};
+	pn5180_transfer_nss(d, sizeof(d));}
 
-	// Enable RX_CRC_ENABLE
+	// Anticollision L2
+	{static const uint8_t d[] = {NFC_AC_CL2};
+	 pn5180_send_data(d, sizeof(d), 0x00);}
+	pn5180_wait_rx();
+	pn5180_read_data(0);
+
+	// Enable TX & RX CRC
+	{static const uint8_t d[] = {CMD_WRITE_REGISTER_OR_MASK, REG_CRC_TX_CONFIG, 0x01, 0x00, 0x00, 0x00};
+	 pn5180_transfer_nss_const(d, sizeof(d));}
+	{static const uint8_t d[] = {CMD_WRITE_REGISTER_OR_MASK, REG_CRC_RX_CONFIG, 0x01, 0x00, 0x00, 0x00};
+	 pn5180_transfer_nss_const(d, sizeof(d));}
+	// Select CL2
+	// UID 4-7, check byte 1
+	{static const uint8_t d[] = {NFC_SEL_CL2, 0x62, 0x81, 0x63, 0x80, 0x00};
+	 pn5180_send_data(d, sizeof(d), 0x00);}
+	pn5180_wait_rx();
+	pn5180_read_data(0);
+
+#else
+	// Enable TX & RX CRC
+	{static const uint8_t d[] = {CMD_WRITE_REGISTER_OR_MASK, REG_CRC_TX_CONFIG, 0x01, 0x00, 0x00, 0x00};
+	 pn5180_transfer_nss_const(d, sizeof(d));}
 	{static const uint8_t d[] = {CMD_WRITE_REGISTER_OR_MASK, REG_CRC_RX_CONFIG, 0x01, 0x00, 0x00, 0x00};
 	 pn5180_transfer_nss_const(d, sizeof(d));}
 
@@ -384,6 +425,7 @@ void pn5180_tick()
 	 pn5180_send_data(d, sizeof(d), 0x00);}
 	pn5180_wait_rx();
 	pn5180_read_data(0);
+#endif
 
 	// GET_VERSION
 	{static const uint8_t d[] = {NFC_NTAG_GET_VERSION};
